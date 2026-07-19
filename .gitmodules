@@ -1,0 +1,12 @@
+[submodule "azazel"]
+	path = azazel
+	url = https://github.com/godofecht/azazel.git
+[submodule "danzig"]
+	path = danzig
+	url = https://github.com/godofecht/danzig.git
+[submodule "zaza"]
+	path = zaza
+	url = https://github.com/godofecht/zaza.git
+[submodule "zaza-agent"]
+	path = zaza-agent
+	url = https://github.com/godofecht/zaza-agent.git

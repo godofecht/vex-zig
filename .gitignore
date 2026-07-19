@@ -1,0 +1,9 @@
+# Third-party checkouts, kept locally but not part of this index.
+# See README.md for what they are and where they come from.
+/capy/
+/zig/
+/zig-libs/
+
+# macOS
+.DS_Store
+/.zig-cache/
