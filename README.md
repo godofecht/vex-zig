@@ -22,11 +22,15 @@ git submodule update --init
 | [azazel](https://github.com/godofecht/azazel) | public | CUE-driven build configuration layer. Generates `build_spec.zig` from `project.cue`. |
 | [danzig](https://github.com/godofecht/danzig) | public | VST3 plugin framework in pure Zig. No JUCE, no SDK, no external dependencies. |
 | [zaza](https://github.com/godofecht/zaza) | public | Zig-driven build system for C, C++, Zig, CMake interop, and WebAssembly. |
-| [zaza-agent](https://github.com/godofecht/zaza-agent) | private | MCP server exposing zaza and azazel as tools, plus its skill docs. TypeScript. |
+
+zaza-agent, the MCP server exposing zaza and azazel as agent tools, is a
+private repo and deliberately not a submodule here. A public index cannot
+carry a private submodule without breaking `--recurse-submodules` for anyone
+without access to it.
 
 ## Toolchain
 
-Zig **0.14.1**. Not 0.14.0: capy gates on an exact version match and rejects it.
+Zig **0.14.1**. capy gates on an exact version match, so 0.14.0 is rejected.
 
 ```sh
 zig version   # 0.14.1

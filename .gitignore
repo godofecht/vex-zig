@@ -4,6 +4,9 @@
 /zig/
 /zig-libs/
 
+# Private repo, deliberately not a submodule of this public index.
+/zaza-agent/
+
 # macOS
 .DS_Store
 /.zig-cache/
