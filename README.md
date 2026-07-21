@@ -30,10 +30,11 @@ without access to it.
 
 ## Toolchain
 
-Zig **0.14.1**. capy gates on an exact version match, so 0.14.0 is rejected.
+Zig **0.14.1 or 0.15.2**. All three build and test on either, and CI runs a
+matrix over both. 0.14.0 is rejected by capy, which gates on an exact match.
 
 ```sh
-zig version   # 0.14.1
+zig version   # 0.14.1 or 0.15.2
 ```
 
 Each submodule builds and tests on its own:
