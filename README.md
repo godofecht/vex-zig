@@ -30,11 +30,12 @@ without access to it.
 
 ## Toolchain
 
-Zig **0.14.1 or 0.15.2**. All three build and test on either, and CI runs a
-matrix over both. 0.14.0 is rejected by capy, which gates on an exact match.
+Zig **0.14.1, 0.15.2, or 0.16.0**. All three submodules build and test on each,
+and CI runs a matrix over all three. 0.14.0 is rejected by capy, which gates on
+an exact match.
 
 ```sh
-zig version   # 0.14.1 or 0.15.2
+zig version   # 0.14.1, 0.15.2, or 0.16.0
 ```
 
 Each submodule builds and tests on its own:
@@ -58,7 +59,7 @@ nothing to do with the projects above and are kept only for local reference.
 | `zig/` | [ziglang/zig](https://codeberg.org/ziglang/zig) | 671 MB |
 | `zig-libs/zylix/` | [kotsutsumi/zylix](https://github.com/kotsutsumi/zylix) | 79 MB |
 
-Nothing in the four submodules depends on any of them.
+Nothing in the three submodules depends on any of them.
 
 ## Updating pins
 
