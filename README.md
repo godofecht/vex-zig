@@ -19,7 +19,7 @@ git submodule update --init
 
 | Submodule | Visibility | What it is |
 |---|---|---|
-| [azazel](https://github.com/godofecht/azazel) | public | CUE-driven build configuration layer. Generates `build_spec.zig` from `project.cue`. |
+| [azazel](https://github.com/godofecht/azazel) | public | CUE-driven build configuration layer. Generates `build_spec.zig` from `project.cue` and carries the 10-repo huge Zig corpus readiness harness. |
 | [danzig](https://github.com/godofecht/danzig) | public | VST3 plugin framework in pure Zig. No JUCE, no SDK, no external dependencies. |
 | [zaza](https://github.com/godofecht/zaza) | public | Zig-driven build system for C, C++, Zig, CMake interop, and WebAssembly. |
 
@@ -47,6 +47,12 @@ cd azazel && ./gen_build_spec.sh && zig build test
 ```
 
 azazel needs `cue` on PATH, since `build_spec.zig` is generated and gitignored.
+Its huge-project corpus harness also has a pinned 10-repo batch plan for checking
+large Zig integrations across forks:
+
+```sh
+cd azazel && tools/huge_corpus.py --plan --expect-count 10
+```
 
 ## Not tracked here
 
