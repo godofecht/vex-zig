@@ -1,10 +1,10 @@
 # Corpus Parity — Full Record
 
 Status as of 2026-08-06. This is the complete record of the azazel + zaza corpus
-parity effort: eleven public repos, the azazel features the corpus drove, the
+parity effort: twelve public repos, the azazel features the corpus drove, the
 measured build-speed findings, and the honest limits.
 
-Comparison dashboard (all eleven, live):
+Comparison dashboard (all twelve, live):
 https://claude.ai/code/artifact/8c37ee83-b358-4351-a1e0-eb02ec0aedd4
 
 ## What the corpus is
@@ -22,7 +22,7 @@ The zaza side aligns with the other agent's in-repo `corpus/` methodology
 stages the pinned upstream into a git-ignored `vendor/`, and a small consumer
 exercises the slice.
 
-## The eleven public parity repos
+## The twelve public parity repos
 
 All CI-green. Clean-cache build times (Apple Silicon, fastest of two, deps
 pre-fetched). `native` = the upstream's own `zig build` where reproducible.
@@ -40,6 +40,10 @@ pre-fetched). `native` = the upstream's own `zig build` where reproducible.
 | **zls** | `Uri` parse/normalize consumer | 0.17 | 3.5s | 3.3s | — |
 | **microzig** | `flags` parser consumer | 0.17 | 3.4s | 3.1s | — |
 | **river** | Wayland compositor `util` (allocator + monotonic clock) | 0.16 | 4.4s | 4.3s | — |
+| **sqlite** | `libsqlite3` compiled from the C amalgamation both ways | 0.14 | 14.1s † | 11.7s | 7.1s ‡ |
+
+† azazel cold; a warm shared-cache restore is **0.25s**. ‡ native here is plain
+`cc -O2` (7.1s), not a Zig build; CMake configure+build is 8.7s.
 
 Notes:
 - **Faster than native** where the upstream ships a full build and azazel/zaza
@@ -50,6 +54,16 @@ Notes:
 - Single-file slices (ghostty, mach, zls, microzig, zig, river) have no
   reproducible native full build here (huge / version-locked / broken deps /
   system-lib dependent), so `native` is left blank rather than faked.
+- **sqlite is the honest counter-case.** It compiles a real third-party C
+  library (the 9 MB amalgamation) from source both ways. On a cold single-file
+  compile, plain `cc -O2` (7.1s) beats azazel (14.1s) and zaza (11.7s): `zig cc`
+  carries overhead clang alone does not. Against CMake (8.7s), the build system
+  a C project would actually use, zaza and azazel are within a few seconds and
+  skip the configure step. The win here is not the cold compile — it is the
+  model-keyed cache: a warm restore is 0.25s, so every rerun, CI job, and other
+  machine skips the 7s compile that `cc` pays every time. This is the corpus's
+  clean test of building a C library from source, kept in the record precisely
+  because it does not flatter the tools.
 
 ## Azazel features the corpus drove (all merged to `main`)
 
