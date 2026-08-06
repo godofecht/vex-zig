@@ -159,6 +159,19 @@ an empty Zig cache but a shared store restores the (working) artifact in ~0.6s �
 **~15×**, no compilation. This is the transferable half of a remote cache
 (caching, not remote execution), with the key computed declaratively.
 
+**Compile only what you use — the key is the `@import` graph, not the tree.**
+The key hashes only sources reachable via `@import` from each module root, not
+every `.zig` under the root's directory. A file that sits in the tree but is
+never imported cannot affect the build, so it must not affect the key; walking
+the real import edges stops such files from spuriously busting the cache.
+Measured: tigerbeetle's key covered 244 in-tree files but the target reaches
+only **138** — 106 files (43%) were noise that forced a rebuild on any unrelated
+edit; libxev 40 → 27, capy 90 → 84. Verified on tigerbeetle: editing a
+never-imported build-tooling file leaves the key unchanged (no spurious miss),
+while editing a reached source changes it (real edit detected). Still sound —
+Zig `@import` arguments are string literals, so the static scan sees every edge
+and over-includes conditional imports rather than missing them.
+
 **Rolled out across the whole corpus.** Every parity repo's CI now builds
 through `cache_build.sh` against its own free GitHub Releases store (the
 `cache` release), with `permissions: contents: write` and `GH_TOKEN` on the
