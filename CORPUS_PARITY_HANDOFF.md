@@ -73,7 +73,7 @@ The question was "why can't Zig get Bazel/Ninja speedups?" Measured answer:
 | **Caching** (content-addressed) | **89×** — 14.2s cold → 0.16s rebuild | Zig already has it; azazel/zaza inherit it |
 | **Incremental** (edit one file) | **10.8×** — 14.2s → 1.32s | deps stay cached, only the changed target recompiles |
 | **Resident compiler** (`--watch -fincremental`) | **2.9×** — cold 5.66s → 1.94s on an edit | recompiles the changed decl in ms; the residual ~2s is the *link*, not the compile (see below) |
-| **Shared cache from the model** (shipped, free) | **~15×** on a fresh machine — cold 9.3s → restore 0.6s local / 2.9s over free GitHub Releases | key computed from the model without compiling; a fresh machine skips the build (azazel `cache_key.sh` / `cache_build.sh`) |
+| **Shared cache from the model** (shipped, free, corpus-wide) | **~15×** on a fresh machine — cold 9.3s → restore 0.6s local / 2.9s over free GitHub Releases | key computed from the model without compiling; a fresh machine skips the build (azazel `cache_key.sh` / `cache_build.sh`). Live in every parity repo's CI; libxev re-run logged a real `HIT` |
 | **CI dependency cache** (shipped) | **2×** — cold 13.3s → warm 6.6s | `actions/cache` on `~/.cache/zig`, rolled out to all repos |
 | **Memoized CUE codegen** (shipped) | **20×** — 0.20s → 0.01s | erases azazel's only per-build overhead; azazel now matches zaza |
 | **Parallelism** (many cores) | **1.1×** — marginal | see below |
@@ -158,6 +158,16 @@ slice (zigimg + uucode): a fresh cold build is ~9.3s; a second fresh machine wit
 an empty Zig cache but a shared store restores the (working) artifact in ~0.6s —
 **~15×**, no compilation. This is the transferable half of a remote cache
 (caching, not remote execution), with the key computed declaratively.
+
+**Rolled out across the whole corpus.** Every parity repo's CI now builds
+through `cache_build.sh` against its own free GitHub Releases store (the
+`cache` release), with `permissions: contents: write` and `GH_TOKEN` on the
+azazel job. First run of a commit is a MISS (build, then upload the keyed
+`<key>.tar`); any later run of the same inputs is a HIT that downloads the
+artifact and skips the compile. Confirmed live: a re-run of the libxev CI
+logged `[azazel-cache] HIT 904034d1…` — the second run restored the built
+`libxev.a` from the release instead of recompiling. Free infrastructure only,
+no paid object store.
 
 ## Config complexity
 
