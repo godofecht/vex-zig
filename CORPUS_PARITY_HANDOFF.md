@@ -72,10 +72,16 @@ The question was "why can't Zig get Bazel/Ninja speedups?" Measured answer:
 |-------|----------------|------|
 | **Caching** (content-addressed) | **89×** — 14.2s cold → 0.16s rebuild | Zig already has it; azazel/zaza inherit it |
 | **Incremental** (edit one file) | **10.8×** — 14.2s → 1.32s | deps stay cached, only the changed target recompiles |
+| **Resident compiler** (`--watch -fincremental`) | **2.9×** — cold 5.66s → 1.94s on an edit | recompiles the changed decl in ms; the residual ~2s is the *link*, not the compile (see below) |
+| **Shared cache from the model** (shipped, free) | **~15×** on a fresh machine — cold 9.3s → restore 0.6s local / 2.9s over free GitHub Releases | key computed from the model without compiling; a fresh machine skips the build (azazel `cache_key.sh` / `cache_build.sh`) |
 | **CI dependency cache** (shipped) | **2×** — cold 13.3s → warm 6.6s | `actions/cache` on `~/.cache/zig`, rolled out to all repos |
 | **Memoized CUE codegen** (shipped) | **20×** — 0.20s → 0.01s | erases azazel's only per-build overhead; azazel now matches zaza |
 | **Parallelism** (many cores) | **1.1×** — marginal | see below |
 | **GPU** | none | compilation is branchy, sequential, dependency-ordered — anti-GPU |
+
+All eight measured on the corpus. The two winners no build system ships by
+default — a resident compiler and a model-keyed shared cache — are detailed under
+"the real lever: residency" below.
 
 **Why parallelism barely helps Zig (1.1×):** Bazel/Ninja win on C++ because C++
 has thousands of heavy, independent translation units. Zig's model is the
