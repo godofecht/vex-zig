@@ -92,10 +92,26 @@ or zig-gamedev — the payload, not the build system.
 ### The real lever: residency, not parallelism
 
 The modern feature for a compiler like Zig is not spreading work across cores —
-it's keeping the compiler **resident**. Measured: `-fincremental` as a batch
-`build-exe` call gives no speedup (1.16s cold → 1.22s after a 1-line edit → 1.19s
-no-change) because each invocation cold-starts and discards the in-memory state.
-Incrementality only pays off against a compiler that stays alive.
+it's keeping the compiler **resident**. Measured two ways:
+
+- **Batch `-fincremental` gives nothing** (1.16s cold → 1.22s after a 1-line
+  edit → 1.19s no-change): each `build-exe` invocation cold-starts and discards
+  the in-memory state. Incrementality only pays off against a compiler that stays
+  alive.
+- **`zig build --watch -fincremental` (resident) does pay off.** On a
+  66k-line / 6000-function project: cold **5.66s**, and a resident incremental
+  rebuild after editing one declaration **1.94s — 2.9×**. The revealing part:
+  editing a single *leaf function* (1.99s) costs the same as editing a *constant*
+  (1.94s), and both match a fully-cached *warm rebuild that only relinks* (2.30s).
+  So the resident compiler recompiles the changed declaration in milliseconds —
+  **the entire residual ~2s is the link step** relinking the 4.9 MB binary,
+  independent of edit size.
+
+The measured conclusion: incremental *compilation* is already near-free with a
+resident compiler; **the wall is the link**. That is precisely what Zig's
+roadmap **in-place binary patching** removes — patch the changed function's bytes
+into the existing binary and skip the relink. The 2.9× is the compiler going
+resident; the remaining ~2s is the relink that patching would erase.
 
 What would really improve Zig's build philosophy from here:
 
