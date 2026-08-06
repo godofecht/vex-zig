@@ -138,6 +138,21 @@ dead-declaration elimination driven by the model. The build system's job shifts
 from "orchestrate a batch of compiles" to "keep one warm compiler and hand it the
 minimal delta."
 
+**Shared content-addressed cache — prototyped and measured** (azazel
+`cache_key.sh` + `cache_build.sh`, see azazel `CACHE.md`). `cache_key.sh` prints a
+portable content key computed *without invoking the compiler* — from the
+normalized model (`cue export`), every `.zig` source under each module root
+(hashed), the pinned dep identities in `build.zig.zon`, and the toolchain lane +
+zig version. Identical inputs → identical key on any machine; over-invalidation
+is sound. `cache_build.sh` restores `zig-out` from a shared store on a key hit and
+skips the build. Because the key comes from the committed model *before*
+compiling, a **fresh machine with an empty `~/.cache/zig` can skip the build
+entirely** — which Zig's local cache alone cannot do. Measured on the libvaxis
+slice (zigimg + uucode): a fresh cold build is ~9.3s; a second fresh machine with
+an empty Zig cache but a shared store restores the (working) artifact in ~0.6s —
+**~15×**, no compilation. This is the transferable half of a remote cache
+(caching, not remote execution), with the key computed declaratively.
+
 ## Config complexity
 
 azazel's declarative CUE model is a **median 1.9× smaller by bytes** than zaza's
@@ -210,8 +225,9 @@ azazel-parity-<repo>/
   zls full library (diffz/lsp deps need a 0.17 toolchain none available compiles),
   mach engine module (generated Vulkan bindings), river full build (Wayland +
   pkg-config).
-- A content-addressed / remote dependency-artifact cache is the natural next
-  build-speed lever: azazel holds every dep by pinned hash as data, so it can
-  reuse compiled artifacts across machines and compile only used fields (as
-  libvaxis already does with uucode) — something a hand-written `build.zig`
-  can't expose as cleanly.
+- A content-addressed / shared artifact cache — **DONE** (azazel `cache_key.sh` +
+  `cache_build.sh`, measured ~15× on a fresh machine; see the residency section
+  and azazel `CACHE.md`). Remaining frontier: an actual object-store backend
+  (S3/network) behind `$SHARED`, and generalizing "compile only used fields"
+  beyond uucode. In-place binary patching is upstream Zig's to build; the
+  measurement above shows it's the last barrier once the compiler is resident.
